@@ -10,7 +10,7 @@ export default function MovieBox({
   return (
     <ul
       className={cn(
-        "grid grid-cols-3 place-items-center gap-4 h-[75dvh]  overflow-y-scroll",
+        "grid grid-cols-3 place-items-center gap-4 h-[calc(100dvh-8rem)]  overflow-y-scroll",
         className
       )}>
       {children}
