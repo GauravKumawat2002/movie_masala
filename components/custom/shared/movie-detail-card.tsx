@@ -1,30 +1,42 @@
 import { useEffect, useState } from "react";
-
+import { Card, CardHeader, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
 import StarRating from "@/components/custom/shared/star-rating";
+import { useSelectedMovieStore, useWatchedMoviesStore } from "@/store/global-store";
+import SpinningLoader from "./loader";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 // MovieDetails component
-export default function MovieDetails({
-  selectedMovieId,
-  onCloseMovie,
-  onAddWatched, // handleAddWatched function will be passed as a prop to the MovieDetails component in this prop
-  watched,
-}: {
-  selectedMovieId: string;
-  onCloseMovie: () => void;
-  onAddWatched: (movie: WatchedMovie) => void;
-  watched: WatchedMovie[];
-}) {
+export default function MovieDetailsCard({ className }: { className?: string }) {
+  const KEY = "f9a2e728";
   // State variables
   const [selectedMovie, setSelectedMovie] = useState<SelectedMovie | {}>({});
   const [userRating, setUserRating] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // state variable for selectedMovie Id
+  const selectedMovieId = useSelectedMovieStore(state => state.selectedMovieId);
+  const resetSelectedMovieId = useSelectedMovieStore(state => state.resetSelectedMovieId);
+
+  // state variable for watchedMovies
+  const watchedMovies = useWatchedMoviesStore(state => state.watchedMovies);
+  const addWatchedMovies = useWatchedMoviesStore(state => state.addWatchedMovies);
+
+  // these two will be called watched-movie-card component not here
+  // const removeWatchedMovies = useWatchedMoviesStore(state => state.removeWatchedMovies);
+  // const resetWatchedMovies = useWatchedMoviesStore(state => state.resetWatchedMovies);
+
   // Check if the selected movie is already in the watched list
-  const isWatched = watched.map(movie => movie.imdbID).includes(selectedMovieId);
+  const isWatched = watchedMovies
+    .map(movie => movie.imdbID)
+    .includes(typeof selectedMovieId === "string" ? selectedMovieId : "");
 
   // Get the user rating of the selected movie
-  const watchedUserRating = watched.find(movie => movie.imdbID === selectedMovieId)?.userRating;
+  const watchedUserRating = watchedMovies.find(
+    movie => movie.imdbID === selectedMovieId
+  )?.userRating;
 
   // Destructure properties from selectedMovie
   const {
@@ -54,7 +66,7 @@ export default function MovieDetails({
         const data = await response.json();
         if (data.Response === "False") throw new Error(data.Error);
         setSelectedMovie(data);
-        if (selectedMovieId) document.title = `🍿 ${data.Title}`;
+        if (selectedMovieId) document.title = `${data.Title}`;
       } catch (err) {
         // Ignore abort errors
         if (err instanceof Error && err.name !== "AbortError") {
@@ -68,7 +80,7 @@ export default function MovieDetails({
     selectedMovieId && getMoviesDetails();
     return () => {
       controller.abort();
-      document.title = "🍿 usePopcorn";
+      document.title = "Movie Masala";
     };
   }, [selectedMovieId]);
 
@@ -76,7 +88,7 @@ export default function MovieDetails({
   useEffect(() => {
     function closeMovieOnEsc(e: KeyboardEvent) {
       if (e.code === "Escape") {
-        onCloseMovie();
+        resetSelectedMovieId();
       }
     }
 
@@ -86,7 +98,7 @@ export default function MovieDetails({
 
   // Create a new watched movie object
   const newWatchedMovie: WatchedMovie = {
-    imdbID: selectedMovieId,
+    imdbID: selectedMovieId as string,
     Poster: posters,
     Title: title,
     imdbRating: imdbRating,
@@ -96,8 +108,10 @@ export default function MovieDetails({
   };
 
   // Function to handle adding the movie to the watched list
-  function handleWatched() {
-    onAddWatched(newWatchedMovie);
+  function handleAddToWatched() {
+    addWatchedMovies(newWatchedMovie);
+    console.log(watchedMovies);
+    resetSelectedMovieId();
   }
 
   // Function to handle setting the user rating
@@ -106,53 +120,62 @@ export default function MovieDetails({
   };
 
   return (
-    <div className="details">
-      {loading && <h2 className="loader">Loading...</h2>}
-      {!loading && !error && (
+    <div className={cn("", className)}>
+      {loading && <SpinningLoader />}
+      {!loading && !error && selectedMovieId && (
         <>
-          <header>
-            <button className="btn-back" onClick={onCloseMovie}>
-              &larr;
-            </button>
-            <img src={posters} alt={`Poster of ${title}`} />
-            <div className="details-overview">
-              <h2>{title}</h2>
-              <p>
-                {released} &bull; {runtime}
-              </p>
-              <p>{genre}</p>
-              <p>
-                <span>⭐</span>
-                {imdbRating} IMDb Rating
-              </p>
-            </div>
-          </header>
-          <section>
-            <div className="rating">
-              {!isWatched ? (
-                <>
-                  <StarRating numStars={10} setExternalRating={handleSetUserRating} />
-                  {parseFloat(userRating) > 0 && (
-                    <button
-                      className="btn-add"
-                      onClick={() => {
-                        handleWatched();
-                        onCloseMovie();
-                      }}>
-                      Add to Watched
-                    </button>
-                  )}
-                </>
+          <Button className="btn-back" onClick={resetSelectedMovieId}>
+            &larr;
+          </Button>
+          <Card className="flex-row flex shadow-primary/50 shadow-lg dark:shadow-background">
+            <CardHeader className="basis-1/2">
+              <Image
+                src={posters}
+                alt={`Poster of ${title}`}
+                width={150}
+                height={200}
+                className="w-full"
+              />
+              {isWatched ? (
+                <p>You rated this movie {watchedUserRating} </p>
               ) : (
-                <p>You rated it {watchedUserRating} </p>
+                <Button onClick={handleAddToWatched}>Add to Watched</Button>
               )}
-            </div>
-            <p>
-              <em>{plot}</em>
-            </p>
-            <p>Starring: {actors} </p>
-            <p>Directed by {director}</p>
-          </section>
+            </CardHeader>
+
+            <CardContent className="pt-5 pl-0 basis-1/2">
+              <CardTitle className="text-2xl tracking-wider font-bold">{title}</CardTitle>
+              <CardDescription>
+                <span className="text-bold text-lg dark:text-white">Released :</span> 📅 {released}
+              </CardDescription>
+              <CardDescription>
+                <span className="text-bold text-lg dark:text-white">Runtime :</span> 🎥 {runtime}
+              </CardDescription>
+              <CardDescription>
+                <span className="text-bold text-lg dark:text-white">imdb Rating :</span> ⭐{" "}
+                {imdbRating}
+              </CardDescription>
+              <CardDescription className="text-balance">
+                <span className="text-bold text-lg dark:text-white">Genre :</span> {genre}
+              </CardDescription>
+              <CardDescription className="text-balance">
+                <span className="text-bold text-lg dark:text-white">Plot :</span> {plot}
+              </CardDescription>
+              <CardDescription className="text-balance">
+                <span className="text-bold text-lg dark:text-white">Actors :</span> 🎭 {actors}
+              </CardDescription>
+              <CardDescription className="text-balance">
+                <span className="text-bold text-lg dark:text-white">Director :</span> 🎬 {director}
+              </CardDescription>
+              <CardDescription>
+                <StarRating
+                  numStars={10}
+                  defaultRating={5}
+                  setExternalRating={handleSetUserRating}
+                />
+              </CardDescription>
+            </CardContent>
+          </Card>
         </>
       )}
       {error && <h2 className="error">{error}</h2>}
