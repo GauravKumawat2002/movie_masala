@@ -1,14 +1,10 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-
-export default function Search({
-  query,
-  setQuery,
-}: {
-  query: string;
-  setQuery: (arg: string) => void;
-}) {
+import { useQueryStore } from "@/store/global-store";
+export default function Search() {
+  const query = useQueryStore(state => state.query);
+  const setQuery = useQueryStore(state => state.setQuery);
   const [inputValue, setInputValue] = useState(query);
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     e.key === "Enter" && setQuery(inputValue);
