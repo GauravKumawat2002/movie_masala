@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { StarHalf, StarIcon } from "lucide-react";
+import { Star, StarIcon } from "lucide-react";
 export default function StarRating({
   numStars,
   defaultRating = 0,
@@ -45,7 +45,7 @@ export default function StarRating({
           style={{ cursor: "pointer" }}
           key={index}
           tabIndex={0}>
-          {index + 1 <= (hover ?? rating) ? <StarIcon color={color} /> : <StarHalf color={color} />}
+          {index + 1 <= (hover ?? rating) ? <StarIcon color={color} /> : <Star color={color} />}
         </li>
       ))}
       <p style={{ color: `${color}` }}>
