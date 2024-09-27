@@ -6,16 +6,16 @@ import SpinningLoader from "./loader";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import KEY from "@/KEY";
 
 // MovieDetails component
 export default function MovieDetailsCard({ className }: { className?: string }) {
-  const KEY = "f9a2e728";
   // State variables
   const [selectedMovie, setSelectedMovie] = useState<SelectedMovie | {}>({});
-  const [userRating, setUserRating] = useState("");
+  const [userRating, setUserRating] = useState<null | string>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  console.log(userRating);
   // state variable for selectedMovie Id
   const selectedMovieId = useSelectedMovieStore(state => state.selectedMovieId);
   const resetSelectedMovieId = useSelectedMovieStore(state => state.resetSelectedMovieId);
@@ -96,6 +96,11 @@ export default function MovieDetailsCard({ className }: { className?: string }) 
     return () => document.removeEventListener("keydown", closeMovieOnEsc);
   }, [selectedMovieId]);
 
+  // Reset userRating when the component mounts or remounts
+  useEffect(() => {
+    setUserRating("0");
+  }, []);
+
   // Create a new watched movie object
   const newWatchedMovie: WatchedMovie = {
     imdbID: selectedMovieId as string,
@@ -103,13 +108,14 @@ export default function MovieDetailsCard({ className }: { className?: string }) 
     Title: title,
     imdbRating: imdbRating,
     runtime: runtime,
-    userRating: userRating,
+    userRating: userRating as string,
     Year: released,
   };
 
   // Function to handle adding the movie to the watched list
   function handleAddToWatched() {
     addWatchedMovies(newWatchedMovie);
+    setUserRating("0");
     console.log(watchedMovies);
     resetSelectedMovieId();
   }
@@ -124,7 +130,7 @@ export default function MovieDetailsCard({ className }: { className?: string }) 
       {loading && <SpinningLoader />}
       {!loading && !error && selectedMovieId && (
         <>
-          <Button className="btn-back" onClick={resetSelectedMovieId}>
+          <Button className="btn-back mb-4" onClick={resetSelectedMovieId}>
             &larr;
           </Button>
           <Card className="flex-row flex shadow-primary/50 shadow-lg dark:shadow-background">
@@ -136,11 +142,13 @@ export default function MovieDetailsCard({ className }: { className?: string }) 
                 height={200}
                 className="w-full"
               />
-              {isWatched ? (
-                <p>You rated this movie {watchedUserRating} </p>
-              ) : (
-                <Button onClick={handleAddToWatched}>Add to Watched</Button>
+              {isWatched && (
+                <p className="text-center">
+                  You rated this movie{" "}
+                  <span className="font-semibold text-lg">{watchedUserRating}</span>{" "}
+                </p>
               )}
+              {userRating !== "0" && <Button onClick={handleAddToWatched}>Add to Watched</Button>}
             </CardHeader>
 
             <CardContent className="pt-5 pl-0 basis-1/2">
@@ -168,11 +176,9 @@ export default function MovieDetailsCard({ className }: { className?: string }) 
                 <span className="text-bold text-lg dark:text-white">Director :</span> 🎬 {director}
               </CardDescription>
               <CardDescription>
-                <StarRating
-                  numStars={10}
-                  defaultRating={5}
-                  setExternalRating={handleSetUserRating}
-                />
+                {!isWatched && (
+                  <StarRating maxRating={10} onSetRating={handleSetUserRating} size={24} />
+                )}
               </CardDescription>
             </CardContent>
           </Card>
