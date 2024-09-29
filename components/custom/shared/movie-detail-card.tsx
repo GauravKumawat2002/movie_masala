@@ -60,10 +60,13 @@ export default function MovieDetailsCard({ className }: { className?: string }) 
     async function getMoviesDetails() {
       setLoading(true);
       try {
-        const response = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&i=${selectedMovieId}`, {
-          signal: controller.signal,
-          method: "GET",
-        });
+        const response = await fetch(
+          `https://www.omdbapi.com/?apikey=${KEY}&i=${selectedMovieId}`,
+          {
+            signal: controller.signal,
+            method: "GET",
+          }
+        );
 
         if (!response.ok) throw new Error("Failed to fetch movies");
         const data = await response.json();

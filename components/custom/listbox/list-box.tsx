@@ -25,7 +25,7 @@ export default function ListBox({ className }: { className?: string }) {
 
         try {
           const response = await fetch(
-            `http://www.omdbapi.com/?i=tt1375666&apikey=${KEY}&s=${query}`,
+            `https://www.omdbapi.com/?i=tt1375666&apikey=${KEY}&s=${query}`,
             { signal: controller.signal, method: "GET" }
           );
           if (!response.ok) throw new Error("Failed to fetch Movies");
