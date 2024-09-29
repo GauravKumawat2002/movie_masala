@@ -1,21 +1,27 @@
+import KEY from "@/KEY";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
 import { useEffect, useState } from "react";
+import {
+  useLoadingStore,
+  useSelectedMovieStore,
+  useWatchedMoviesStore,
+} from "@/store/global-store";
+import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
 import StarRating from "@/components/custom/shared/star-rating";
-import { useSelectedMovieStore, useWatchedMoviesStore } from "@/store/global-store";
 import SpinningLoader from "./loader";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
-import { cn } from "@/lib/utils";
-import KEY from "@/KEY";
 
 // MovieDetails component
 export default function MovieDetailsCard({ className }: { className?: string }) {
   // State variables
   const [selectedMovie, setSelectedMovie] = useState<SelectedMovie | {}>({});
   const [userRating, setUserRating] = useState<null | string>(null);
-  const [loading, setLoading] = useState(false);
+
+  const loading = useLoadingStore(state => state.loading);
+  const setLoading = useLoadingStore(state => state.setLoading);
   const [error, setError] = useState<string | null>(null);
-  console.log(userRating);
+  // console.log(userRating);
   // state variable for selectedMovie Id
   const selectedMovieId = useSelectedMovieStore(state => state.selectedMovieId);
   const resetSelectedMovieId = useSelectedMovieStore(state => state.resetSelectedMovieId);
@@ -23,20 +29,6 @@ export default function MovieDetailsCard({ className }: { className?: string }) 
   // state variable for watchedMovies
   const watchedMovies = useWatchedMoviesStore(state => state.watchedMovies);
   const addWatchedMovies = useWatchedMoviesStore(state => state.addWatchedMovies);
-
-  // these two will be called watched-movie-card component not here
-  // const removeWatchedMovies = useWatchedMoviesStore(state => state.removeWatchedMovies);
-  // const resetWatchedMovies = useWatchedMoviesStore(state => state.resetWatchedMovies);
-
-  // Check if the selected movie is already in the watched list
-  const isWatched = watchedMovies
-    .map(movie => movie.imdbID)
-    .includes(typeof selectedMovieId === "string" ? selectedMovieId : "");
-
-  // Get the user rating of the selected movie
-  const watchedUserRating = watchedMovies.find(
-    movie => movie.imdbID === selectedMovieId
-  )?.userRating;
 
   // Destructure properties from selectedMovie
   const {
@@ -51,12 +43,23 @@ export default function MovieDetailsCard({ className }: { className?: string }) 
     Plot: plot,
   } = selectedMovie as SelectedMovie;
 
+  // Create a new watched movie object
+  const newWatchedMovie: WatchedMovie = {
+    imdbID: selectedMovieId as string,
+    Poster: posters,
+    Title: title,
+    imdbRating: imdbRating,
+    runtime: runtime,
+    userRating: userRating as string,
+    Year: released,
+  };
+
   // Fetch movie details when selectedMovieId changes
   useEffect(() => {
     const controller = new AbortController();
     async function getMoviesDetails() {
+      setLoading(true);
       try {
-        setLoading(true);
         const response = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&i=${selectedMovieId}`, {
           signal: controller.signal,
           method: "GET",
@@ -101,22 +104,11 @@ export default function MovieDetailsCard({ className }: { className?: string }) 
     setUserRating("0");
   }, []);
 
-  // Create a new watched movie object
-  const newWatchedMovie: WatchedMovie = {
-    imdbID: selectedMovieId as string,
-    Poster: posters,
-    Title: title,
-    imdbRating: imdbRating,
-    runtime: runtime,
-    userRating: userRating as string,
-    Year: released,
-  };
-
   // Function to handle adding the movie to the watched list
   function handleAddToWatched() {
     addWatchedMovies(newWatchedMovie);
     setUserRating("0");
-    console.log(watchedMovies);
+    // console.log(watchedMovies);
     resetSelectedMovieId();
   }
 
@@ -124,6 +116,16 @@ export default function MovieDetailsCard({ className }: { className?: string }) 
   const handleSetUserRating = (rating: number) => {
     setUserRating(rating.toString());
   };
+
+  // Check if the selected movie is already in the watched list
+  const isWatched = watchedMovies
+    .map(movie => movie.imdbID)
+    .includes(typeof selectedMovieId === "string" ? selectedMovieId : "");
+
+  // Get the user rating of the selected movie
+  const watchedUserRating = watchedMovies.find(
+    movie => movie.imdbID === selectedMovieId
+  )?.userRating;
 
   return (
     <div className={cn("", className)}>
@@ -133,51 +135,79 @@ export default function MovieDetailsCard({ className }: { className?: string }) 
           <Button className="btn-back mb-4" onClick={resetSelectedMovieId}>
             &larr;
           </Button>
-          <Card className="flex-row flex shadow-primary/50 shadow-lg dark:shadow-background">
-            <CardHeader className="basis-1/2">
-              <Image
-                src={posters}
-                alt={`Poster of ${title}`}
-                width={150}
-                height={200}
-                className="w-full"
-              />
-              {isWatched && (
-                <p className="text-center">
-                  You rated this movie{" "}
-                  <span className="font-semibold text-lg">{watchedUserRating}</span>{" "}
-                </p>
-              )}
+          <Card className="flex-col  lg:flex-row flex shadow-primary/50 shadow-lg dark:shadow-background">
+            <CardHeader className="basis-1/3">
+              <div>
+                <Image
+                  src={posters === "N/A" ? "/" : posters}
+                  alt={`Poster of ${title}`}
+                  width={300}
+                  height={100}
+                  className=" mx-auto aspect-[9/16]"
+                />
+              </div>
+
               {userRating !== "0" && <Button onClick={handleAddToWatched}>Add to Watched</Button>}
             </CardHeader>
 
-            <CardContent className="pt-5 pl-0 basis-1/2">
-              <CardTitle className="text-2xl tracking-wider font-bold">{title}</CardTitle>
-              <CardDescription>
-                <span className="text-bold text-lg dark:text-white">Released :</span> 📅 {released}
+            <CardContent className="lg:pt-5 lg:pl-0 basis-2/3">
+              <CardTitle className="text-2xl lg:text-4xl pb-4 tracking-wider font-bold ">
+                {title}
+              </CardTitle>
+              <CardDescription className="lg:text-lg">
+                <span className="font-semibold text-primary text-lg lg:text-xl dark:text-white">
+                  Released :
+                </span>{" "}
+                📅 {released}
               </CardDescription>
-              <CardDescription>
-                <span className="text-bold text-lg dark:text-white">Runtime :</span> 🎥 {runtime}
+              <CardDescription className="lg:text-lg">
+                <span className="font-semibold text-primary text-lg lg:text-xl dark:text-white">
+                  Runtime :
+                </span>{" "}
+                🎥 {runtime}
               </CardDescription>
-              <CardDescription>
-                <span className="text-bold text-lg dark:text-white">imdb Rating :</span> ⭐{" "}
-                {imdbRating}
+              <CardDescription className="lg:text-lg">
+                <span className="font-semibold text-primary text-lg lg:text-xl dark:text-white">
+                  imdb Rating :
+                </span>{" "}
+                ⭐ {imdbRating}
               </CardDescription>
-              <CardDescription className="text-balance">
-                <span className="text-bold text-lg dark:text-white">Genre :</span> {genre}
+              <CardDescription className="lg:text-lg">
+                <span className="font-semibold text-primary text-lg lg:text-xl dark:text-white">
+                  Genre :
+                </span>{" "}
+                {genre}
               </CardDescription>
-              <CardDescription className="text-balance">
-                <span className="text-bold text-lg dark:text-white">Plot :</span> {plot}
+              <CardDescription className="lg:text-lg">
+                <span className="font-semibold text-primary text-lg lg:text-xl dark:text-white">
+                  Plot :
+                </span>{" "}
+                {plot}
               </CardDescription>
-              <CardDescription className="text-balance">
-                <span className="text-bold text-lg dark:text-white">Actors :</span> 🎭 {actors}
+              <CardDescription className="lg:text-lg">
+                <span className="font-semibold text-primary text-lg lg:text-xl dark:text-white">
+                  Actors :
+                </span>{" "}
+                🎭 {actors}
               </CardDescription>
-              <CardDescription className="text-balance">
-                <span className="text-bold text-lg dark:text-white">Director :</span> 🎬 {director}
+              <CardDescription className="lg:text-lg">
+                <span className="font-semibold text-primary text-lg lg:text-xl dark:text-white">
+                  Director :
+                </span>{" "}
+                🎬 {director}
               </CardDescription>
-              <CardDescription>
-                {!isWatched && (
+              <CardDescription className="lg:text-lg">
+                {!isWatched ? (
                   <StarRating maxRating={10} onSetRating={handleSetUserRating} size={24} />
+                ) : (
+                  <>
+                    {" "}
+                    <span className="font-semibold text-primary text-xl dark:text-white">
+                      User Rating :
+                    </span>{" "}
+                    You rated this movie{" "}
+                    <span className="font-bold text-primary/70 ">{watchedUserRating}</span>{" "}
+                  </>
                 )}
               </CardDescription>
             </CardContent>
