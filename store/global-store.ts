@@ -1,11 +1,11 @@
-import { User } from "lucide-react";
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
 // movies
 type MoviesState = {
   movies: Movie[];
   setMovies: (movies: Movie[]) => void;
 };
-
 export const useMovieStore = create<MoviesState>(set => ({
   movies: [],
   setMovies: (movies: Movie[]) => set({ movies: movies }),
@@ -26,7 +26,6 @@ type LoadingState = {
   loading: boolean;
   setLoading: (loading: boolean) => void;
 };
-
 export const useLoadingStore = create<LoadingState>(set => ({
   loading: false,
   setLoading: (loading: boolean) => set({ loading }),
@@ -37,7 +36,6 @@ type ErrorState = {
   error: string;
   setError: (error: string) => void;
 };
-
 export const useErrorStore = create<ErrorState>(set => ({
   error: "",
   setError: (error: string) => set({ error }),
@@ -72,16 +70,36 @@ type WatchedMoviesState = {
   removeWatchedMovies: (id: string) => void;
   resetWatchedMovies: () => void;
 };
+export const useWatchedMoviesStore = create(
+  persist<WatchedMoviesState>(
+    set => ({
+      watchedMovies: [],
+      addWatchedMovies: (watchedMovie: WatchedMovie) =>
+        set(state => ({
+          watchedMovies: state.watchedMovies.some(movie => watchedMovie.imdbID === movie.imdbID)
+            ? state.watchedMovies
+            : [...state.watchedMovies, watchedMovie],
+        })),
 
-export const useWatchedMoviesStore = create<WatchedMoviesState>(set => ({
-  watchedMovies: [],
-  addWatchedMovies: (watchedMovie: WatchedMovie) =>
-    set(state => ({
-      watchedMovies: state.watchedMovies.some(movie => watchedMovie.imdbID === movie.imdbID)
-        ? state.watchedMovies
-        : [...state.watchedMovies, watchedMovie],
-    })),
-  removeWatchedMovies: (id: string) =>
-    set(state => ({ watchedMovies: state.watchedMovies.filter(movie => movie.imdbID !== id) })),
-  resetWatchedMovies: () => set({ watchedMovies: [] }),
+      removeWatchedMovies: (id: string) =>
+        set(state => ({
+          watchedMovies: state.watchedMovies.filter(movie => movie.imdbID !== id),
+        })),
+
+      resetWatchedMovies: () => set({ watchedMovies: [] }),
+    }),
+    {
+      name: "watchedMovies", // key for localStorage
+    }
+  )
+);
+
+// onWatchedMovies
+type OnWatchedMoviesState = {
+  onWatchedMovies: boolean;
+  setOnWatchedMovies: (onWatchedMovies: boolean) => void;
+};
+export const useOnWatchedMoviesStore = create<OnWatchedMoviesState>(set => ({
+  onWatchedMovies: false,
+  setOnWatchedMovies: (onWatchedMovies: boolean) => set({ onWatchedMovies: onWatchedMovies }),
 }));
