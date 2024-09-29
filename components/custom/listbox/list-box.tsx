@@ -1,11 +1,12 @@
-"use client";
 import { useEffect } from "react";
-import { useErrorStore, useLoadingStore, useMovieStore } from "@/store/global-store";
+import { useErrorStore, useLoadingStore, useMovieStore, useQueryStore } from "@/store/global-store";
 import MovieBox from "@/components/custom/shared/movie-box";
 import MovieCard from "@/components/custom/shared/movie-card";
 import SpinningLoader from "../shared/loader";
+import KEY from "@/KEY";
 
-export default function ListBox({ className, query }: { className?: string; query: string }) {
+export default function ListBox({ className }: { className?: string }) {
+  const query = useQueryStore(state => state.query);
   // state for movies
   const movies = useMovieStore(state => state.movies);
   const setMovies = useMovieStore(state => state.setMovies);
@@ -15,7 +16,6 @@ export default function ListBox({ className, query }: { className?: string; quer
   // state for error
   const error = useErrorStore(state => state.error);
   const setError = useErrorStore(state => state.setError);
-  const KEY = "f9a2e728";
 
   useEffect(
     function () {
@@ -31,7 +31,6 @@ export default function ListBox({ className, query }: { className?: string; quer
           if (!response.ok) throw new Error("Failed to fetch Movies");
           const data = await response.json();
           if (data.Response === "False") throw new Error(data.Error);
-          console.log(data.Search);
           setMovies(data.Search);
         } catch (err) {
           if (err instanceof Error && err.name !== "AbortError") {
@@ -58,15 +57,20 @@ export default function ListBox({ className, query }: { className?: string; quer
   );
 
   return (
-    <MovieBox className={className}>
+    <>
       {loading && <SpinningLoader />}
-      {!loading &&
-        !error &&
-        movies &&
-        movies.map(movie => <MovieCard cardType="MovieCard" key={movie.imdbID} movie={movie} />)}
-      {!loading && error && (
-        <p className="text-semibold text-3xl text-red-800 dark:text-red-500">{error}</p>
+      {!loading && !error && movies && (
+        <MovieBox className={className}>
+          {movies.map(movie => (
+            <MovieCard cardType="MovieCard" key={movie.imdbID} movie={movie} />
+          ))}
+        </MovieBox>
       )}
-    </MovieBox>
+      {!loading && error && (
+        <div className="grid place-items-center mt-20">
+          <p className="text-semibold text-3xl text-red-800 dark:text-red-500"> {error}</p>
+        </div>
+      )}
+    </>
   );
 }
