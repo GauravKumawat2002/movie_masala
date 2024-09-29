@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-
 export default function MovieBox({
   children,
   className,
@@ -10,7 +9,7 @@ export default function MovieBox({
   return (
     <ul
       className={cn(
-        "grid grid-cols-3 place-items-center gap-4 h-[calc(100dvh-8rem)]  overflow-y-scroll",
+        "grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 place-items-center gap-4 ",
         className
       )}>
       {children}
