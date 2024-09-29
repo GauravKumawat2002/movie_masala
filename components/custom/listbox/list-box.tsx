@@ -53,7 +53,7 @@ export default function ListBox({ className }: { className?: string }) {
         controller.abort();
       };
     },
-    [query]
+    [query, setMovies, setLoading, setError]
   );
 
   return (

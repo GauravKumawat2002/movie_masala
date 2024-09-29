@@ -15,7 +15,7 @@ import SpinningLoader from "./loader";
 // MovieDetails component
 export default function MovieDetailsCard({ className }: { className?: string }) {
   // State variables
-  const [selectedMovie, setSelectedMovie] = useState<SelectedMovie | {}>({});
+  const [selectedMovie, setSelectedMovie] = useState<SelectedMovie | object>({});
   const [userRating, setUserRating] = useState<null | string>(null);
 
   const loading = useLoadingStore(state => state.loading);
@@ -85,7 +85,7 @@ export default function MovieDetailsCard({ className }: { className?: string }) 
       controller.abort();
       document.title = "Movie Masala";
     };
-  }, [selectedMovieId]);
+  }, [selectedMovieId, setLoading]);
 
   // Close the movie details component when the user presses the escape key
   useEffect(() => {
@@ -97,7 +97,7 @@ export default function MovieDetailsCard({ className }: { className?: string }) 
 
     document.addEventListener("keydown", closeMovieOnEsc);
     return () => document.removeEventListener("keydown", closeMovieOnEsc);
-  }, [selectedMovieId]);
+  }, [selectedMovieId, resetSelectedMovieId]);
 
   // Reset userRating when the component mounts or remounts
   useEffect(() => {
