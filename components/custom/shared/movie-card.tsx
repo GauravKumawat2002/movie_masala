@@ -8,10 +8,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import Routes from "@/lib/routes";
-import {
-  useSelectedMovieStore,
-  useWatchedMoviesStore,
-} from "@/store/global-store";
+import { useWatchedMoviesStore } from "@/store/global-store";
 import { Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -24,9 +21,6 @@ export default function MovieCard({
   cardType: "MovieCard" | "WatchedMovieCard";
 }) {
   const router = useRouter();
-  const setSelectedMovieId = useSelectedMovieStore(
-    (state) => state.setSelectedMovieId,
-  );
   const removeWatchedMovies = useWatchedMoviesStore(
     (state) => state.removeWatchedMovies,
   );
@@ -37,7 +31,7 @@ export default function MovieCard({
 
   const handleKeyDown = (e: React.KeyboardEvent, movieId: string) => {
     if (e.key === "Enter") {
-      setSelectedMovieId(movieId);
+      router.push(`${Routes.movieDetail}/${movieId}`);
     }
   };
 
@@ -46,8 +40,7 @@ export default function MovieCard({
       <li
         tabIndex={0}
         onClick={() => {
-          setSelectedMovieId(movie.imdbID);
-          router.push(Routes.movieDetail);
+          router.push(`${Routes.movieDetail}/${movie.imdbID}`);
         }}
         onFocus={handleFocus}
         onBlur={handleBlur}
@@ -98,8 +91,7 @@ export default function MovieCard({
         onBlur={handleBlur}
         onKeyDown={(event) => handleKeyDown(event, watchedMovie.imdbID)}
         onClick={() => {
-          setSelectedMovieId(watchedMovie.imdbID);
-          router.push(Routes.movieDetail);
+          router.push(`${Routes.movieDetail}/${movie.imdbID}`);
         }}
         style={{ outline: "none" }}
       >
