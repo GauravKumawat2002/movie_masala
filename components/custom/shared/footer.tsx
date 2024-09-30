@@ -1,9 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import {
-  useWatchedMoviesStore,
-  useSelectedMovieStore,
-} from "@/store/global-store";
+import { useWatchedMoviesStore } from "@/store/global-store";
 import Routes from "@/lib/routes";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -15,17 +12,12 @@ export default function Footer() {
     (state) => state.resetWatchedMovies,
   );
 
-  const resetSelectedMovieId = useSelectedMovieStore(
-    (state) => state.resetSelectedMovieId,
-  );
-
   // evnet handler functions
   function handleSearchMovies() {
     router.push(pathName === Routes.watchList ? Routes.home : Routes.watchList);
   }
   function handleResetWatchedMovies() {
     resetWatchedMovies();
-    resetSelectedMovieId();
   }
 
   return (
