@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import {
-  useLoadingStore,
   useSelectedMovieStore,
   useWatchedMoviesStore,
 } from "@/store/global-store";
@@ -17,39 +16,39 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import StarRating from "@/components/custom/shared/star-rating";
-import SpinningLoader from "./loader";
+import SpinningLoader from "@/components/custom/shared/loader";
 import { useRouter } from "next/navigation";
+import useFetchMovies from "@/hooks/use-fetchMovies";
 
 // MovieDetails component
 export default function MovieDetailsCard({
   className,
+  parameter,
 }: {
   className?: string;
+  parameter: string;
 }) {
   const router = useRouter();
-  // State variables
-  const [selectedMovie, setSelectedMovie] = useState<SelectedMovie | object>(
-    {},
-  );
+
+  // state variable for userRating
   const [userRating, setUserRating] = useState<null | string>(null);
-
-  const loading = useLoadingStore((state) => state.loading);
-  const setLoading = useLoadingStore((state) => state.setLoading);
-  const [error, setError] = useState<string | null>(null);
-  // console.log(userRating);
-  // state variable for selectedMovie Id
-  const selectedMovieId = useSelectedMovieStore(
-    (state) => state.selectedMovieId,
+  // State variables for selected Movie //Make a globaL STATE FOR IT
+  const selectedMovie = useSelectedMovieStore((state) => state.selectedMovie);
+  const setSelectedMovie = useSelectedMovieStore(
+    (state) => state.setSelectedMovie,
   );
-  const resetSelectedMovieId = useSelectedMovieStore(
-    (state) => state.resetSelectedMovieId,
-  );
-
   // state variable for watchedMovies
   const watchedMovies = useWatchedMoviesStore((state) => state.watchedMovies);
   const addWatchedMovies = useWatchedMoviesStore(
     (state) => state.addWatchedMovies,
   );
+
+  const { error, isLoading, isSuccess, movies } = useFetchMovies({
+    url: `https://www.omdbapi.com/?apikey=${KEY}&i=${parameter}`,
+  });
+
+  isSuccess && setSelectedMovie(movies as Movie);
+  isSuccess && (document.title = `${(movies as Movie).Title}`);
 
   // Destructure properties from selectedMovie
   const {
@@ -63,10 +62,9 @@ export default function MovieDetailsCard({
     Genre: genre,
     Plot: plot,
   } = selectedMovie as SelectedMovie;
-
   // Create a new watched movie object
   const newWatchedMovie: WatchedMovie = {
-    imdbID: selectedMovieId as string,
+    imdbID: parameter as string,
     Poster: posters,
     Title: title,
     imdbRating: imdbRating,
@@ -75,56 +73,13 @@ export default function MovieDetailsCard({
     Year: released,
   };
 
-  // Fetch movie details when selectedMovieId changes
-  useEffect(() => {
-    const controller = new AbortController();
-    async function getMoviesDetails() {
-      setLoading(true);
-      try {
-        const response = await fetch(
-          `https://www.omdbapi.com/?apikey=${KEY}&i=${selectedMovieId}`,
-          {
-            signal: controller.signal,
-            method: "GET",
-          },
-        );
-
-        if (!response.ok) throw new Error("Failed to fetch movies");
-        const data = await response.json();
-        if (data.Response === "False") throw new Error(data.Error);
-        setSelectedMovie(data);
-        if (selectedMovieId) document.title = `${data.Title}`;
-      } catch (err) {
-        // Ignore abort errors
-        if (err instanceof Error && err.name !== "AbortError") {
-          setError(
-            err instanceof Error ? err.message : "An unknown error occurred",
-          );
-        }
-      } finally {
-        setError(null);
-        setLoading(false);
-      }
-    }
-    selectedMovieId && getMoviesDetails();
-    return () => {
-      controller.abort();
-      document.title = "Movie Masala";
-    };
-  }, [selectedMovieId, setLoading]);
-
-  // Close the movie details component when the user presses the escape key
   useEffect(() => {
     function closeMovieOnEsc(e: KeyboardEvent) {
-      if (e.code === "Escape") {
-        resetSelectedMovieId();
-      }
+      if (e.code === "Escape") router.back();
     }
-
     document.addEventListener("keydown", closeMovieOnEsc);
     return () => document.removeEventListener("keydown", closeMovieOnEsc);
-  }, [selectedMovieId, resetSelectedMovieId]);
-
+  }, [parameter]);
   // Reset userRating when the component mounts or remounts
   useEffect(() => {
     setUserRating("0");
@@ -134,40 +89,35 @@ export default function MovieDetailsCard({
   function handleAddToWatched() {
     addWatchedMovies(newWatchedMovie);
     setUserRating("0");
-    resetSelectedMovieId();
     router.back();
   }
-
   // Function to handle setting the user rating
   const handleSetUserRating = (rating: number) => {
     setUserRating(rating.toString());
   };
-
   // Check if the selected movie is already in the watched list
   const isWatched = watchedMovies
     .map((movie) => movie.imdbID)
-    .includes(typeof selectedMovieId === "string" ? selectedMovieId : "");
-
+    .includes(typeof parameter === "string" ? parameter : "");
   // Get the user rating of the selected movie
   const watchedUserRating = watchedMovies.find(
-    (movie) => movie.imdbID === selectedMovieId,
+    (movie) => movie.imdbID === parameter,
   )?.userRating;
 
   return (
     <div className={cn("", className)}>
-      {loading && <SpinningLoader />}
-      {!loading && !error && selectedMovieId && (
+      {isLoading && <SpinningLoader />}
+      {!isLoading && !error && parameter && (
         <>
           <Button
             className="btn-back mb-4"
             onClick={() => {
-              resetSelectedMovieId();
               router.back();
             }}
           >
             &larr;
           </Button>
-          <Card className="flex flex-col shadow-lg shadow-primary/50 dark:shadow-background lg:flex-row">
+          <Card className="flex flex-col shadow-lg shadow-primary/50 dark:shadow-background sm:flex-row">
             <CardHeader className="basis-1/3">
               <div>
                 <Image
@@ -184,7 +134,7 @@ export default function MovieDetailsCard({
               )}
             </CardHeader>
 
-            <CardContent className="basis-2/3 lg:pl-0 lg:pt-5">
+            <CardContent className="basis-2/3 sm:pl-0 sm:pt-5">
               <CardTitle className="pb-4 text-2xl font-bold tracking-wider lg:text-4xl">
                 {title}
               </CardTitle>
@@ -254,7 +204,7 @@ export default function MovieDetailsCard({
           </Card>
         </>
       )}
-      {error && <h2 className="error">{error}</h2>}
+      {error && <h2 className="error">{error.message}</h2>}
     </div>
   );
 }
