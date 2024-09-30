@@ -134,8 +134,8 @@ export default function MovieDetailsCard({
   function handleAddToWatched() {
     addWatchedMovies(newWatchedMovie);
     setUserRating("0");
-    // console.log(watchedMovies);
     resetSelectedMovieId();
+    router.back();
   }
 
   // Function to handle setting the user rating
