@@ -12,7 +12,7 @@ export default function ListBox({ className }: { className?: string }) {
   const { movies, isLoading, error, isSuccess } = useFetchMovies({
     url: `https://www.omdbapi.com/?i=tt1375666&apikey=${KEY}&s=${query}`,
   });
-
+  //
   if (isSuccess && Array.isArray(movies)) setMovies(movies);
 
   return (
