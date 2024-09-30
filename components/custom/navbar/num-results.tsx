@@ -1,22 +1,22 @@
 "use client";
-import {
-  useMovieStore,
-  useOnWatchedMoviesStore,
-  useWatchedMoviesStore,
-} from "@/store/global-store";
+import { useMovieStore, useWatchedMoviesStore } from "@/store/global-store";
+import { usePathname } from "next/navigation";
+import Routes from "@/lib/routes";
 export default function NumResult() {
-  const movies = useMovieStore(state => state.movies);
-  const onWatchedMovies = useOnWatchedMoviesStore(state => state.onWatchedMovies);
-  const watchedMovies = useWatchedMoviesStore(state => state.watchedMovies);
+  const pathName = usePathname();
+  const movies = useMovieStore((state) => state.movies);
+  const watchedMovies = useWatchedMoviesStore((state) => state.watchedMovies);
+
   return (
     <>
-      {movies.length !== 0 && !onWatchedMovies && (
-        <p className="text-primary text-sm md:text-base text-center">
-          Found <strong>{movies.length}</strong> {movies.length === 1 ? "result" : "results"}
+      {movies.length !== 0 && Routes.home === pathName && (
+        <p className="text-center text-sm text-primary md:text-base">
+          Found <strong>{movies.length}</strong>{" "}
+          {movies.length === 1 ? "result" : "results"}
         </p>
       )}
-      {onWatchedMovies && (
-        <p className="text-primary text-sm md:text-base text-center">
+      {Routes.watchList === pathName && (
+        <p className="text-center text-sm text-primary md:text-base">
           <strong>{watchedMovies.length}</strong> movies Watched
         </p>
       )}

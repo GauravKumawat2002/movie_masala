@@ -1,3 +1,4 @@
+"use client";
 import { useEffect } from "react";
 import { useErrorStore, useLoadingStore, useMovieStore, useQueryStore } from "@/store/global-store";
 import MovieBox from "@/components/custom/shared/movie-box";

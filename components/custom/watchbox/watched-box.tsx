@@ -1,3 +1,4 @@
+"use client";
 import { useWatchedMoviesStore } from "@/store/global-store";
 import MovieCard from "@/components/custom/shared/movie-card";
 import MovieBox from "@/components/custom/shared/movie-box";

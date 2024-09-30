@@ -1,15 +1,18 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { useOnWatchedMoviesStore, useQueryStore } from "@/store/global-store";
+import { useQueryStore } from "@/store/global-store";
 export default function Search() {
   const query = useQueryStore(state => state.query);
+  const router = useRouter();
   const setQuery = useQueryStore(state => state.setQuery);
   const [inputValue, setInputValue] = useState(query);
-  const setOnWatchedBox = useOnWatchedMoviesStore(state => state.setOnWatchedMovies);
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    e.key === "Enter" && setQuery(inputValue);
-    e.key === "Enter" && setOnWatchedBox(false);
+    if (e.key === "Enter") {
+      setQuery(inputValue);
+      router.push("/");
+    }
   };
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {

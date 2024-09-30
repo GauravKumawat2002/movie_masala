@@ -1,3 +1,4 @@
+"use client";
 import KEY from "@/KEY";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -8,27 +9,47 @@ import {
   useWatchedMoviesStore,
 } from "@/store/global-store";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardDescription,
+  CardTitle,
+} from "@/components/ui/card";
 import StarRating from "@/components/custom/shared/star-rating";
 import SpinningLoader from "./loader";
+import { useRouter } from "next/navigation";
 
 // MovieDetails component
-export default function MovieDetailsCard({ className }: { className?: string }) {
+export default function MovieDetailsCard({
+  className,
+}: {
+  className?: string;
+}) {
+  const router = useRouter();
   // State variables
-  const [selectedMovie, setSelectedMovie] = useState<SelectedMovie | object>({});
+  const [selectedMovie, setSelectedMovie] = useState<SelectedMovie | object>(
+    {},
+  );
   const [userRating, setUserRating] = useState<null | string>(null);
 
-  const loading = useLoadingStore(state => state.loading);
-  const setLoading = useLoadingStore(state => state.setLoading);
+  const loading = useLoadingStore((state) => state.loading);
+  const setLoading = useLoadingStore((state) => state.setLoading);
   const [error, setError] = useState<string | null>(null);
   // console.log(userRating);
   // state variable for selectedMovie Id
-  const selectedMovieId = useSelectedMovieStore(state => state.selectedMovieId);
-  const resetSelectedMovieId = useSelectedMovieStore(state => state.resetSelectedMovieId);
+  const selectedMovieId = useSelectedMovieStore(
+    (state) => state.selectedMovieId,
+  );
+  const resetSelectedMovieId = useSelectedMovieStore(
+    (state) => state.resetSelectedMovieId,
+  );
 
   // state variable for watchedMovies
-  const watchedMovies = useWatchedMoviesStore(state => state.watchedMovies);
-  const addWatchedMovies = useWatchedMoviesStore(state => state.addWatchedMovies);
+  const watchedMovies = useWatchedMoviesStore((state) => state.watchedMovies);
+  const addWatchedMovies = useWatchedMoviesStore(
+    (state) => state.addWatchedMovies,
+  );
 
   // Destructure properties from selectedMovie
   const {
@@ -65,7 +86,7 @@ export default function MovieDetailsCard({ className }: { className?: string }) 
           {
             signal: controller.signal,
             method: "GET",
-          }
+          },
         );
 
         if (!response.ok) throw new Error("Failed to fetch movies");
@@ -76,7 +97,9 @@ export default function MovieDetailsCard({ className }: { className?: string }) 
       } catch (err) {
         // Ignore abort errors
         if (err instanceof Error && err.name !== "AbortError") {
-          setError(err instanceof Error ? err.message : "An unknown error occurred");
+          setError(
+            err instanceof Error ? err.message : "An unknown error occurred",
+          );
         }
       } finally {
         setError(null);
@@ -122,12 +145,12 @@ export default function MovieDetailsCard({ className }: { className?: string }) 
 
   // Check if the selected movie is already in the watched list
   const isWatched = watchedMovies
-    .map(movie => movie.imdbID)
+    .map((movie) => movie.imdbID)
     .includes(typeof selectedMovieId === "string" ? selectedMovieId : "");
 
   // Get the user rating of the selected movie
   const watchedUserRating = watchedMovies.find(
-    movie => movie.imdbID === selectedMovieId
+    (movie) => movie.imdbID === selectedMovieId,
   )?.userRating;
 
   return (
@@ -135,10 +158,16 @@ export default function MovieDetailsCard({ className }: { className?: string }) 
       {loading && <SpinningLoader />}
       {!loading && !error && selectedMovieId && (
         <>
-          <Button className="btn-back mb-4" onClick={resetSelectedMovieId}>
+          <Button
+            className="btn-back mb-4"
+            onClick={() => {
+              resetSelectedMovieId();
+              router.back();
+            }}
+          >
             &larr;
           </Button>
-          <Card className="flex-col  lg:flex-row flex shadow-primary/50 shadow-lg dark:shadow-background">
+          <Card className="flex flex-col shadow-lg shadow-primary/50 dark:shadow-background lg:flex-row">
             <CardHeader className="basis-1/3">
               <div>
                 <Image
@@ -146,70 +175,78 @@ export default function MovieDetailsCard({ className }: { className?: string }) 
                   alt={`Poster of ${title}`}
                   width={300}
                   height={100}
-                  className=" mx-auto aspect-[9/16]"
+                  className="mx-auto aspect-[9/16]"
                 />
               </div>
 
-              {userRating !== "0" && <Button onClick={handleAddToWatched}>Add to Watched</Button>}
+              {userRating !== "0" && (
+                <Button onClick={handleAddToWatched}>Add to Watched</Button>
+              )}
             </CardHeader>
 
-            <CardContent className="lg:pt-5 lg:pl-0 basis-2/3">
-              <CardTitle className="text-2xl lg:text-4xl pb-4 tracking-wider font-bold ">
+            <CardContent className="basis-2/3 lg:pl-0 lg:pt-5">
+              <CardTitle className="pb-4 text-2xl font-bold tracking-wider lg:text-4xl">
                 {title}
               </CardTitle>
               <CardDescription className="lg:text-lg">
-                <span className="font-semibold text-primary text-lg lg:text-xl dark:text-white">
+                <span className="text-lg font-semibold text-primary dark:text-white lg:text-xl">
                   Released :
                 </span>{" "}
                 📅 {released}
               </CardDescription>
               <CardDescription className="lg:text-lg">
-                <span className="font-semibold text-primary text-lg lg:text-xl dark:text-white">
+                <span className="text-lg font-semibold text-primary dark:text-white lg:text-xl">
                   Runtime :
                 </span>{" "}
                 🎥 {runtime}
               </CardDescription>
               <CardDescription className="lg:text-lg">
-                <span className="font-semibold text-primary text-lg lg:text-xl dark:text-white">
+                <span className="text-lg font-semibold text-primary dark:text-white lg:text-xl">
                   imdb Rating :
                 </span>{" "}
                 ⭐ {imdbRating}
               </CardDescription>
               <CardDescription className="lg:text-lg">
-                <span className="font-semibold text-primary text-lg lg:text-xl dark:text-white">
+                <span className="text-lg font-semibold text-primary dark:text-white lg:text-xl">
                   Genre :
                 </span>{" "}
                 {genre}
               </CardDescription>
               <CardDescription className="lg:text-lg">
-                <span className="font-semibold text-primary text-lg lg:text-xl dark:text-white">
+                <span className="text-lg font-semibold text-primary dark:text-white lg:text-xl">
                   Plot :
                 </span>{" "}
                 {plot}
               </CardDescription>
               <CardDescription className="lg:text-lg">
-                <span className="font-semibold text-primary text-lg lg:text-xl dark:text-white">
+                <span className="text-lg font-semibold text-primary dark:text-white lg:text-xl">
                   Actors :
                 </span>{" "}
                 🎭 {actors}
               </CardDescription>
               <CardDescription className="lg:text-lg">
-                <span className="font-semibold text-primary text-lg lg:text-xl dark:text-white">
+                <span className="text-lg font-semibold text-primary dark:text-white lg:text-xl">
                   Director :
                 </span>{" "}
                 🎬 {director}
               </CardDescription>
               <CardDescription className="lg:text-lg">
                 {!isWatched ? (
-                  <StarRating maxRating={10} onSetRating={handleSetUserRating} size={24} />
+                  <StarRating
+                    maxRating={10}
+                    onSetRating={handleSetUserRating}
+                    size={24}
+                  />
                 ) : (
                   <>
                     {" "}
-                    <span className="font-semibold text-primary text-xl dark:text-white">
+                    <span className="text-xl font-semibold text-primary dark:text-white">
                       User Rating :
                     </span>{" "}
                     You rated this movie{" "}
-                    <span className="font-bold text-primary/70 ">{watchedUserRating}</span>{" "}
+                    <span className="font-bold text-primary/70">
+                      {watchedUserRating}
+                    </span>{" "}
                   </>
                 )}
               </CardDescription>
