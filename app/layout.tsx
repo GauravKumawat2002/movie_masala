@@ -19,14 +19,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`antialiased `}>
+      <body className={`antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
-          disableTransitionOnChange>
-          <div className="max-w-screen-xl mx-auto">
-            <Navbar className="lg:mt-4 sticky top-0 gap-4 z-50 mx-0 lg:mx-7 2xl:mx-0">
+          disableTransitionOnChange
+        >
+          <div className="mx-auto max-w-screen-xl">
+            <Navbar className="sticky top-0 z-50 mx-0 gap-4 lg:mx-7 lg:mt-4 2xl:mx-0">
               <Logo />
               <Search />
               <NumResult />
